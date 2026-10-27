@@ -20,7 +20,7 @@ CareerPilot AI is a local-first career preparation and internship application ma
 
 ## Technology
 
-- Python 3.14.6
+- Python 3.12 (recommended for Streamlit Community Cloud); local development was tested with Python 3.14.6
 - Streamlit
 - pandas
 - scikit-learn
@@ -50,27 +50,20 @@ Streamlit normally opens the app at `http://localhost:8501`.
 
 ## Tests
 
-Run automated tests from the project folder with:
+Install development dependencies once with `pip install -r requirements-dev.txt`, then run tests from the project folder with:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest
 ```
 
-The resume matcher, PDF/TXT extraction, and recommendation logic have focused automated tests. Tests for the remaining planned features will be added with those features.
+The suite covers resume analysis, PDF/TXT extraction, opportunity searches, application storage, learning progress, interview notes, and public-demo storage safeguards.
 
 ## Privacy and storage
 
-Application tracker records persist in local SQLite at `data/careerpilot.db`. Resume analysis remains local to the current Streamlit session and is not sent to an external analysis service; Streamlit usage-stat collection is disabled. SQLite is unencrypted and should not be treated as secure storage for sensitive information. Local database files and generated user data are excluded from Git by `.gitignore`.
+Application tracker records persist in local SQLite at `data/careerpilot.db`. Resume analysis stays in the current Streamlit session and is not sent to an external analysis service. SQLite is unencrypted and should not be treated as secure storage for sensitive information. Local database files and generated user data are excluded from Git by `.gitignore`.
 
-## Planned milestones
+## Deployment
 
-1. Foundation and navigation
-2. Resume and job-description matcher
-3. SQLite database and application tracker
-4. Manually managed job opportunities
-5. Skill-gap analyzer and learning plan
-6. Interview preparation
-7. Reports and privacy settings
-8. Quality assurance and documentation
+For public hosting, set `CAREERPILOT_DEMO_MODE = "true"` in Streamlit Community Cloud secrets. This disables database writes because the project has no login or per-user database isolation. Resume text and practice answers remain session-only. Hosted SQLite storage is temporary and is not suitable for private or durable user records.
 
-GitHub publishing and deployment instructions will be added after the application is ready for those steps. Nothing is published or deployed automatically.
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Community Cloud setup and verification. GitHub Pages cannot run the Python Streamlit app.

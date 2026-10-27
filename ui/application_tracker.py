@@ -7,11 +7,15 @@ import pandas as pd
 import streamlit as st
 
 from database import STATUSES, delete_application, list_applications, save_application
+from config import public_demo_mode
 
 
 def render_application_tracker() -> None:
     st.title("Application Tracker")
     st.write("Keep application details, deadlines, interviews, and follow-ups in one place.")
+    demo_mode = public_demo_mode()
+    if demo_mode:
+        st.info("Public demo mode: records are read-only and are not saved. Run CareerPilot locally to use the tracker with private local storage.")
     with st.expander("Add an application", expanded=not bool(list_applications())):
         with st.form("application_add", clear_on_submit=True):
             a, b = st.columns(2)
@@ -30,7 +34,7 @@ def render_application_tracker() -> None:
             contact = st.text_input("Contact person (optional)")
             details = st.text_input("Contact details (optional)")
             notes = st.text_area("Notes")
-            submitted = st.form_submit_button("Save application", type="primary")
+            submitted = st.form_submit_button("Save application", type="primary", disabled=demo_mode)
         if submitted:
             try:
                 date_text = lambda d: d.isoformat() if isinstance(d, date) else ""
@@ -70,7 +74,7 @@ def render_application_tracker() -> None:
                 new_status = st.selectbox("Update status", STATUSES, index=STATUSES.index(row["status"]))
                 new_follow = st.text_input("Update follow-up date (YYYY-MM-DD)", value=row.get("follow_up_date") or "")
                 new_notes = st.text_area("Update notes", value=row.get("notes") or "")
-                save = st.form_submit_button("Save updates")
+                save = st.form_submit_button("Save updates", disabled=demo_mode)
                 if save:
                     updated = {key: row.get(key, "") for key in ("company", "role", "job_type", "location", "work_arrangement", "application_url", "date_applied", "deadline", "interview_date", "contact_person", "contact_details")}
                     updated.update(status=new_status, follow_up_date=new_follow, notes=new_notes)
@@ -78,7 +82,7 @@ def render_application_tracker() -> None:
                     st.success("Application updated.")
                     st.rerun()
             confirm = st.checkbox("Confirm deletion", key=f"confirm_delete_{row['id']}")
-            if st.button("Delete application", key=f"delete_{row['id']}", disabled=not confirm):
+            if st.button("Delete application", key=f"delete_{row['id']}", disabled=(not confirm or demo_mode)):
                 delete_application(row["id"])
                 st.success("Application deleted.")
                 st.rerun()

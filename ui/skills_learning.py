@@ -4,6 +4,7 @@ import streamlit as st
 
 from database import get_learning_progress, save_learning_progress
 from services.skill_extractor import extract_skills
+from config import public_demo_mode
 
 ESTIMATES = {"Python": "2-4 weeks", "SQL": "1-3 weeks", "Git": "1-2 weeks", "HTML": "1-2 weeks", "CSS": "1-2 weeks", "JavaScript": "3-6 weeks", "Data Structures and Algorithms": "4-8 weeks", "Machine Learning": "4-8 weeks"}
 IDEAS = {"Python": "Complete beginner exercises, then automate one small task.", "SQL": "Practice SELECT, JOIN, GROUP BY, and build a small database report.", "Git": "Practice commits, branches, merges, and resolving a simple conflict.", "HTML": "Build a semantic one-page portfolio.", "CSS": "Style a responsive portfolio page using flexbox and grid.", "JavaScript": "Build a small interactive project and explain its state changes.", "Data Structures and Algorithms": "Work through progressively harder array, string, and hash map problems.", "Machine Learning": "Train and evaluate a small model on a public dataset."}
@@ -12,6 +13,9 @@ IDEAS = {"Python": "Complete beginner exercises, then automate one small task.",
 def render_skills_learning() -> None:
     st.title("Skills & Learning")
     st.write("Review skills detected in your current resume analysis and track a practical learning plan.")
+    demo_mode = public_demo_mode()
+    if demo_mode:
+        st.info("Public demo mode: saved learning progress is read-only. Run CareerPilot locally to save your plan.")
     analysis = st.session_state.get("resume_analysis")
     if analysis is None:
         st.info("Run an analysis in Resume Matcher first. This page uses that session's resume and job description; it does not infer skills from your application records.")
@@ -44,7 +48,7 @@ def render_skills_learning() -> None:
                 status = st.selectbox("Progress", ["Not started", "In progress", "Practiced", "Completed"], index=["Not started", "In progress", "Practiced", "Completed"].index(prior.get("status", "Not started")))
                 estimate = st.text_input("Estimated time (your estimate)", value=prior.get("estimate", ESTIMATES.get(skill, "2-4 weeks")))
                 recommendation = st.text_area("Practice recommendation", value=prior.get("recommendation", IDEAS.get(skill, f"Build a small project that demonstrates {skill}, then explain your decisions.")))
-                if st.form_submit_button("Save learning progress"):
+                if st.form_submit_button("Save learning progress", disabled=demo_mode):
                     save_learning_progress(skill, priority, status, estimate, recommendation)
                     st.success("Learning progress saved locally.")
                     st.rerun()

@@ -6,9 +6,16 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
+from config import public_demo_mode
+
 DB_PATH = Path(os.environ.get("CAREERPILOT_DB_PATH", Path(__file__).parent / "data" / "careerpilot.db"))
 STATUSES = ("Interested", "Preparing", "Applied", "Online Assessment", "Interview Scheduled", "Interview Completed", "Offer Received", "Rejected", "Withdrawn", "Closed")
 FIELDS = ("company", "role", "job_type", "location", "work_arrangement", "application_url", "date_applied", "deadline", "status", "follow_up_date", "interview_date", "contact_person", "contact_details", "notes")
+
+
+def _require_writable_storage() -> None:
+    if public_demo_mode():
+        raise RuntimeError("Saving is disabled in the public demo to protect visitors' data.")
 
 
 def connect() -> sqlite3.Connection:
@@ -62,6 +69,7 @@ def list_applications(search: str = "", status: str = "All") -> list[dict[str, A
 
 
 def save_application(values: dict[str, Any], record_id: int | None = None) -> None:
+    _require_writable_storage()
     missing = [name for name in ("company", "role", "job_type", "status") if not str(values.get(name, "")).strip()]
     if missing:
         raise ValueError("Company, role, job type, and status are required.")
@@ -80,11 +88,13 @@ def save_application(values: dict[str, Any], record_id: int | None = None) -> No
 
 
 def delete_application(record_id: int) -> None:
+    _require_writable_storage()
     with connect() as conn:
         conn.execute("DELETE FROM applications WHERE id = ?", (record_id,))
 
 
 def reset_database() -> None:
+    _require_writable_storage()
     with connect() as conn:
         conn.execute("DELETE FROM applications")
         conn.execute("DELETE FROM learning_progress")
@@ -99,6 +109,7 @@ def get_learning_progress() -> dict[str, dict[str, str]]:
 
 
 def save_learning_progress(skill: str, priority: str, status: str, estimate: str, recommendation: str) -> None:
+    _require_writable_storage()
     initialize_database()
     with connect() as conn:
         conn.execute("""INSERT INTO learning_progress(skill, priority, status, estimate, recommendation)
@@ -108,6 +119,7 @@ def save_learning_progress(skill: str, priority: str, status: str, estimate: str
 
 
 def save_interview_notes(company: str, role: str, interview_type: str, notes: str) -> None:
+    _require_writable_storage()
     initialize_database()
     with connect() as conn:
         conn.execute("INSERT INTO interview_notes(company, role, interview_type, notes) VALUES (?, ?, ?, ?)", (company, role, interview_type, notes))

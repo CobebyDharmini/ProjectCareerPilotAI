@@ -1,6 +1,7 @@
 import streamlit as st
 from datetime import date, timedelta
 
+from config import public_demo_mode
 from database import STATUSES, list_applications
 
 
@@ -84,6 +85,9 @@ st.sidebar.radio(
 )
 
 active_page = st.session_state["active_page"]
+
+if public_demo_mode():
+    st.info("Public read-only demo. Database saving is disabled; please do not enter sensitive information.")
 
 if active_page == "Dashboard":
     records = list_applications()

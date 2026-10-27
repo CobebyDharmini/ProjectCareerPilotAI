@@ -3,6 +3,7 @@ import streamlit as st
 
 from database import list_interview_notes, save_interview_notes
 from services.skill_extractor import extract_skills
+from config import public_demo_mode
 
 BASE_QUESTIONS = [
     ("Project explanation", "Tell me about a project you worked on. What problem did it solve, what was your contribution, and what would you improve?", "Medium", "Clear ownership, technical choices, and reflection."),
@@ -17,6 +18,9 @@ BASE_QUESTIONS = [
 def render_interview_preparation() -> None:
     st.title("Interview Preparation")
     st.write("Practice with locally generated prompts based on your target role and detected skills.")
+    demo_mode = public_demo_mode()
+    if demo_mode:
+        st.info("Public demo mode: answers stay in your current session, but practice notes cannot be saved to shared storage.")
     with st.form("interview_setup"):
         a, b = st.columns(2)
         company = a.text_input("Company (optional)")
@@ -50,7 +54,7 @@ def render_interview_preparation() -> None:
                 st.checkbox("I answered with a specific example", key=f"interview_check_example_{index}")
                 st.checkbox("I explained my reasoning and outcome", key=f"interview_check_reasoning_{index}")
         notes = st.text_area("Practice session notes", key="interview_session_notes", height=100)
-        if st.button("Save practice notes"):
+        if st.button("Save practice notes", disabled=demo_mode):
             if notes.strip():
                 save_interview_notes(context.get("company", ""), context.get("role", "") or "Unspecified role", context.get("type", "General"), notes.strip())
                 st.success("Practice notes saved locally.")

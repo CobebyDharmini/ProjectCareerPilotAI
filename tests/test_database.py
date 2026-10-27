@@ -1,3 +1,5 @@
+import pytest
+
 from database import (STATUSES, delete_application, get_learning_progress, list_applications,
                       list_interview_notes, reset_database, save_application,
                       save_interview_notes, save_learning_progress)
@@ -37,3 +39,19 @@ def test_validation_and_reset(monkeypatch, tmp_path):
     assert list_applications() == []
     assert get_learning_progress() == {}
     assert list_interview_notes() == []
+
+
+def test_public_demo_mode_blocks_database_writes(monkeypatch, tmp_path):
+    import database
+    monkeypatch.setattr(database, "DB_PATH", tmp_path / "demo.sqlite")
+    monkeypatch.setenv("CAREERPILOT_DEMO_MODE", "true")
+    with pytest.raises(RuntimeError, match="public demo"):
+        save_application({"company": "Example", "role": "Dev", "job_type": "Internship", "status": "Applied"})
+    with pytest.raises(RuntimeError, match="public demo"):
+        save_learning_progress("Python", "High", "In progress", "2 weeks", "Practice")
+    with pytest.raises(RuntimeError, match="public demo"):
+        save_interview_notes("Example", "Dev", "Technical", "Notes")
+    with pytest.raises(RuntimeError, match="public demo"):
+        delete_application(1)
+    with pytest.raises(RuntimeError, match="public demo"):
+        reset_database()
